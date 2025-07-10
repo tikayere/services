@@ -1,0 +1,171 @@
+syntax = "proto3";
+
+package carts;
+
+option go_package = "./proto;carts";
+
+// CartItem represents an item within a cart
+message CartItem {
+  string id = 1;
+  string product_id = 2;
+  int32 quantity = 3;
+  int64 created_at = 4; // Unix timestamp
+  int64 updated_at = 5; // Unix timestamp
+  string cart_id = 6;
+}
+
+// Cart represents a shopping cart in the system
+message Cart {
+  string id = 1;
+  string user_id = 2;
+  int64 expires_at = 3; // Unix timestamp
+  int64 last_activity_at = 4; // Unix timestamp
+  int64 created_at = 5; // Unix timestamp
+  int64 updated_at = 6; // Unix timestamp
+  int64 deleted_at = 7; // Unix timestamp, nullable
+  int32 version = 8; // Optimistic lock version
+  repeated CartItem cart_items = 9; // Embedded cart items
+}
+
+// Request message for creating or getting a cart
+message GetOrCreateCartRequest {
+  string user_id = 1;
+}
+
+// Response message for creating or getting a cart
+message GetOrCreateCartResponse {
+  Cart cart = 1;
+}
+
+// Request message for getting a cart by ID
+message GetCartRequest {
+  string id = 1;
+}
+
+// Response message for getting a cart
+message GetCartResponse {
+  Cart cart = 1;
+}
+
+// Request message for adding an item to the cart
+message AddCartItemRequest {
+  string cart_id = 1;
+  string product_id = 2;
+  int32 quantity = 3;
+}
+
+// Response message for adding an item to the cart
+message AddCartItemResponse {
+  Cart cart = 1;
+}
+
+// Request message for updating a cart item quantity
+message UpdateCartItemRequest {
+  string cart_id = 1;
+  string cart_item_id = 2;
+  int32 quantity = 3;
+  int32 version = 4; // Cart version for optimistic locking
+}
+
+// Response message for updating a cart item
+message UpdateCartItemResponse {
+  Cart cart = 1;
+}
+
+// Request message for removing a cart item
+message RemoveCartItemRequest {
+  string cart_id = 1;
+  string cart_item_id = 2;
+  int32 version = 3; // Cart version for optimistic locking
+}
+
+// Response message for removing a cart item
+message RemoveCartItemResponse {
+  Cart cart = 1;
+}
+
+// Request message for clearing a cart
+message ClearCartRequest {
+  string cart_id = 1;
+  int32 version = 2; // Cart version for optimistic locking
+}
+
+// Response message for clearing a cart
+message ClearCartResponse {
+  Cart cart = 1;
+}
+
+// Request message for listing carts (admin)
+message ListCartsRequest {
+  int32 limit = 1;
+  int32 offset = 2;
+  string user_id = 3; // Optional filter by user_id
+  bool include_deleted = 4; // Include soft-deleted carts
+}
+
+// Response message for listing carts
+message ListCartsResponse {
+  repeated Cart carts = 1;
+  int32 total = 2;
+}
+
+// Request message for force deleting a cart (Admin operation)
+message ForceDeleteCartRequest {
+  string id = 1;
+}
+
+// Response message for force deleting a cart
+message ForceDeleteCartResponse {
+  string id = 1;
+  bool success = 2;
+}
+
+// Request message for soft deleting a cart (Admin or User operation)
+message SoftDeleteCartRequest {
+  string id = 1;
+  int32 version = 2; // Cart version for optimistic locking
+}
+
+// Response message for soft deleting a cart
+message SoftDeleteCartResponse {
+  string id = 1;
+  bool success = 2;
+}
+
+// Request message for restoring a soft-deleted cart (Admin operation)
+message RestoreCartRequest {
+  string id = 1;
+}
+
+// Response message for restoring a cart
+message RestoreCartResponse {
+  Cart cart = 1;
+}
+
+// Request message for exporting carts (Admin operation)
+message ExportCartsRequest {
+  int32 limit = 1;
+  int32 offset = 2;
+  string user_id = 3;
+  bool include_deleted = 4;
+}
+
+// CartService defines the RPC methods for general cart management
+service CartService {
+  // Cart operations
+  rpc GetOrCreateCart(GetOrCreateCartRequest) returns (GetOrCreateCartResponse) {}
+  rpc GetCart(GetCartRequest) returns (GetCartResponse) {}
+  rpc AddCartItem(AddCartItemRequest) returns (AddCartItemResponse) {}
+  rpc UpdateCartItem(UpdateCartItemRequest) returns (UpdateCartItemResponse) {}
+  rpc RemoveCartItem(RemoveCartItemRequest) returns (RemoveCartItemResponse) {}
+  rpc ClearCart(ClearCartRequest) returns (ClearCartResponse) {}
+  rpc SoftDeleteCart(SoftDeleteCartRequest) returns (SoftDeleteCartResponse) {}
+}
+
+// AdminService defines the RPC methods for privileged admin operations
+service AdminService {
+  rpc ListCarts(ListCartsRequest) returns (ListCartsResponse) {}
+  rpc ForceDeleteCart(ForceDeleteCartRequest) returns (ForceDeleteCartResponse) {}
+  rpc RestoreCart(RestoreCartRequest) returns (RestoreCartResponse) {}
+  rpc ExportCarts(ExportCartsRequest) returns (stream Cart) {}
+}

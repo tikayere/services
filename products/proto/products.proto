@@ -1,0 +1,204 @@
+syntax = "proto3";
+
+package products;
+
+option go_package = "./proto;products";
+
+// Product represents a product in the system
+message Product {
+  string id = 1;
+  string name = 2;
+  string description = 3;
+  double price = 4;
+  int32 stock_quantity = 5;
+  string user_id = 6;
+  string subcategory_id = 7;
+  int64 created_at = 8; // Unix timestamp
+  int64 updated_at = 9; // Unix timestamp
+  bool is_active = 10;
+  Subcategory subcategory = 11; // Embedded subcategory
+}
+
+// Category represents a product category
+message Category {
+  string id = 1;
+  string name = 2;
+  string description = 3;
+  int64 created_at = 4;
+  int64 updated_at = 5;
+  repeated Subcategory subcategories = 6;
+}
+
+// Subcategory represents a product subcategory
+message Subcategory {
+  string id = 1;
+  string name = 2;
+  string description = 3;
+  int64 created_at = 4;
+  int64 updated_at = 5;
+  string category_id = 6;
+  Category category = 7; // Embedded category
+}
+
+// Request message for creating a product
+message CreateProductRequest {
+  string name = 1;
+  string description = 2;
+  double price = 3;
+  int32 stock_quantity = 4;
+  string user_id = 5;
+  string subcategory_id = 6;
+}
+
+// Response message for creating a product
+message CreateProductResponse {
+  Product product = 1;
+}
+
+// Request message for getting a product by ID
+message GetProductRequest {
+  string id = 1;
+}
+
+// Response message for getting a product
+message GetProductResponse {
+  Product product = 1;
+}
+
+// Request message for updating a product
+message UpdateProductRequest {
+  string id = 1;
+  string name = 2;
+  string description = 3;
+  double price = 4;
+  int32 stock_quantity = 5;
+  string subcategory_id = 6;
+}
+
+// Response message for updating a product
+message UpdateProductResponse {
+  Product product = 1;
+}
+
+// Request message for listing products
+message ListProductsRequest {
+  int32 limit = 1;
+  int32 offset = 2;
+  string filter = 3; // Optional filter string (e.g., name or description)
+}
+
+// Response message for listing products
+message ListProductsResponse {
+  repeated Product products = 1;
+  int32 total = 2;
+}
+
+// Request message for creating a category
+message CreateCategoryRequest {
+  string name = 1;
+  string description = 2;
+}
+
+// Response message for creating a category
+message CreateCategoryResponse {
+  Category category = 1;
+}
+
+// Request message for getting a category by ID
+message GetCategoryRequest {
+  string id = 1;
+}
+
+// Response message for getting a category
+message GetCategoryResponse {
+  Category category = 1;
+}
+
+// Request message for creating a subcategory
+message CreateSubcategoryRequest {
+  string name = 1;
+  string description = 2;
+  string category_id = 3;
+}
+
+// Response message for creating a subcategory
+message CreateSubcategoryResponse {
+  Subcategory subcategory = 1;
+}
+
+// Request message for getting a subcategory by ID
+message GetSubcategoryRequest {
+  string id = 1;
+}
+
+// Response message for getting a subcategory
+message GetSubcategoryResponse {
+  Subcategory subcategory = 1;
+}
+
+// Request message for searching products
+message SearchProductsRequest {
+  string query = 1;
+  int32 limit = 2;
+  int32 offset = 3;
+}
+
+// Response message for searching products
+message SearchProductsResponse {
+  repeated Product products = 1;
+  int32 total = 2;
+}
+
+// Request message for force deleting a product (Admin operation)
+message ForceDeleteProductRequest {
+  string id = 1;
+}
+
+// Response message for force deleting a product
+message ForceDeleteProductResponse {
+  string id = 1;
+  bool success = 2;
+}
+
+// Request message for bulk creating products (Admin operation)
+message BulkCreateProductsRequest {
+  repeated CreateProductRequest products = 1;
+}
+
+// Response message for bulk creating products
+message BulkCreateProductsResponse {
+  repeated Product products = 1;
+  int32 total = 2;
+}
+
+// Request message for exporting products (Admin operation)
+message ExportProductsRequest {
+  int32 limit = 1;
+  int32 offset = 2;
+  string filter = 3;
+}
+
+// ProductService defines the RPC methods for general product management
+service ProductService {
+  // Product CRUD operations
+  rpc CreateProduct(CreateProductRequest) returns (CreateProductResponse) {}
+  rpc GetProduct(GetProductRequest) returns (GetProductResponse) {}
+  rpc UpdateProduct(UpdateProductRequest) returns (UpdateProductResponse) {}
+  rpc ListProducts(ListProductsRequest) returns (ListProductsResponse) {}
+  rpc SearchProducts(SearchProductsRequest) returns (SearchProductsResponse) {}
+  
+  // Category CRUD operations
+  rpc CreateCategory(CreateCategoryRequest) returns (CreateCategoryResponse) {}
+  rpc GetCategory(GetCategoryRequest) returns (GetCategoryResponse) {}
+  
+  // Subcategory CRUD operations
+  rpc CreateSubcategory(CreateSubcategoryRequest) returns (CreateSubcategoryResponse) {}
+  rpc GetSubcategory(GetSubcategoryRequest) returns (GetSubcategoryResponse) {}
+}
+
+// AdminService defines the RPC methods for privileged admin operations
+service AdminService {
+  rpc ForceDeleteProduct(ForceDeleteProductRequest) returns (ForceDeleteProductResponse) {}
+  rpc BulkCreateProducts(stream CreateProductRequest) returns (BulkCreateProductsResponse) {}
+  rpc ExportProducts(ExportProductsRequest) returns (stream Product) {}
+}
